@@ -1,2 +1,23 @@
+-> Compilar o programa
 nasm -f elf -o hello.o hello.asm
 ld -m elf_i386 -o hello hello.o
+
+-> Configurar git no wsl
+>> git config --global user.email "you@example.com"
+>> git config --global user.name "Your Name"
+
+-> Pegar repositório
+>> git init
+>> git branch -m main
+>> git remote add origin https://github.com/jacckk7/Trabalho-2-Software-Basico.git
+>> git pull
+
+-> Fazer commit
+>> git bcheckout -b <nome da branch>
+>> git add .
+>> git commit -m "<Mensagem do que foi alterado>"
+>> git push origin <nome da branch>
+
+-> Após pr feito
+>> git checkout main
+>> git pull

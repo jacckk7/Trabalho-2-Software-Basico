@@ -60,7 +60,7 @@ _start:
 
     push personName
     push eax                ;tamanho da string nome
-    call escrever_nome       ;escreve person_name
+    call print_string       ;escreve person_name
 
     push welcometwo
     push size_welcometwo
@@ -142,20 +142,6 @@ ler_nome:    ;retorna o tamanho da string no eax
     pop ebp
     ret 8
 
-escrever_nome:  
-        push ebp
-        mov ebp, esp
-        push eax
-
-        mov eax, 4
-        mov ebx, 1
-        mov ecx, [ebp + 12]
-        mov edx, [ebp + 8]
-        int 80h
-
-        pop eax
-        pop ebp
-        ret 4
 
 print_string:
     push ebp

@@ -51,8 +51,8 @@ _start:
     call print_string       ;escreve name
     
     push personName
-    push 16
-    call ler_nome           ;le nome -> retorna tamanho do nome
+    push 16                 ;le apenas 15 caracteres
+    call ler_string         ;le nome -> retorna tamanho do nome
 
     push welcomeone
     push size_welcomeone
@@ -71,62 +71,119 @@ _start:
     call print_string       ;escreve precision
 
     push chosenPrecision
-    call ler_opcoes         ;le oçoes
+    push 2
+    call ler_string         ;le precisao -> retorna o tamanho da opção
 
     push option
     push size_option
-    call print_string
+    call print_string       ;escreve opcoes
 
     push addition
     push size_addition
-    call print_string
+    call print_string       ;escreve adicao
 
     push subtraction
     push size_subtraction
-    call print_string
+    call print_string       ;escreve subtracao
 
     push multiplication
     push size_multiplication
-    call print_string
+    call print_string       ;escreve multiplicacao
 
     push division
     push size_division
-    call print_string
+    call print_string       ;escreve divisao
 
     push expo
     push size_expo
-    call print_string
+    call print_string       ;escreve exponenciacao
 
     push modul
     push size_modul
-    call print_string
+    call print_string       ;escreve modulo
 
     push getout
     push size_getout
+    call print_string       ;escreve sair
+
+    call ler_int_16
+
+    mov [chosenOption], eax
+    push chosenOption
+    push 2
     call print_string
-
     
-
 
     ; Encerre o programa
     mov eax, 1
     xor ebx, ebx
     int 0x80
 
-ler_opcoes:
-    push ebp
-    mov ebp, esp
+ler_int_16:
+            push ebp
+            mov ebp, esp
 
-    mov eax, 3
-    mov ebx, 0
-    mov ecx, [ebp + 8]
-    mov edx, 1
-    int 80h
+            sub esp, 6              ;reserva espaço para numero
 
-    pop ebp
-    ret 4
+            mov eax, 3
+            mov ebx, 0
+            mov ecx, esp
+            mov edx, 6
+            int 80h                 ;le numero 16bits e escreve em [esp]
 
-ler_nome:    ;retorna o tamanho da string no eax
+            dec eax
+            mov byte[esp + eax], 0  ;tira o \n
+
+            ;verifica se tem -
+            ;esp-- eax--
+            mov bl, [esp]
+            cmp ebx, 2dh
+            jne continue
+            push byte 1
+            dec esp
+            dec eax
+
+continue:   dec eax                 ;expoente de 10
+            mov ecx, eax            ;ecx = expoente do 10
+            mov eax, 0              ;eax = resp
+            mov edx, 0              ;index
+            mov ebx, 0              
+
+p_caracter: 
+            mov bl, [esp + edx + 1]    ;le caracter
+            sub bl, 30h            ;passa para int
+            push ecx                ;salva expoente 10
+            push edx                ;salva index
+mult10:     
+            cmp ecx, 0              ;verifica se == 0
+            je proximo
+            sal ebx, 1              ;ebx = 2i
+            mov edx, ebx            ;edx = 2i
+            sal ebx, 2              ;ebx = 8i
+            add ebx, edx            ;ebx = 10i
+            dec ecx
+            jmp mult10
+proximo:    pop edx                 ;recupera index
+            pop ecx                 ;recupera expoente 10
+            dec ecx                 ;proximo expoente
+            inc edx                 ;proximo caracter
+            add eax, ebx            ;adiciona a resposta
+            cmp ecx, 0
+
+            jge p_caracter
+
+            cmp [esp], byte 1
+            jne fim          
+            mov ebx, eax
+            mov eax, 0
+            sub eax, ebx
+            add esp, 1
+
+fim:        add esp, 6
+            pop ebp
+            ret
+
+ler_string:    ;retorna o tamanho da string no eax
     push ebp
     mov ebp, esp
 
@@ -147,13 +204,19 @@ print_string:
     push ebp
     mov ebp, esp
     push eax
+    push ebx
+    push ecx
+    push edx
 
     mov eax, 4
     mov ebx, 1
     mov ecx, [ebp + 12]
     mov edx, [ebp + 8]
     int 80h
-
+    
+    pop edx
+    pop ecx
+    pop ebx
     pop eax
     pop ebp
     ret 8

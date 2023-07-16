@@ -74,7 +74,7 @@ _start:
     push 2
     call ler_string         ;le precisao -> retorna o tamanho da opção
 
-    push option
+loop_principal:    push option
     push size_option
     call print_string       ;escreve opcoes
 
@@ -106,8 +106,28 @@ _start:
     push size_getout
     call print_string       ;escreve sair
 
-    call ler_int_16
+    push chosenOption
+    push 1
+    call ler_string
 
+    cmp [chosenOption], byte 37h
+    je sair 
+    cmp [chosenOption], byte 36h
+    je mod
+    cmp [chosenOption], byte 35h
+    je exp
+    cmp [chosenOption], byte 34h
+    je divi
+    cmp [chosenOption], byte 33h
+    je multi
+    cmp [chosenOption], byte 32h
+    je subi
+
+subi:
+multi:  
+divi:
+exp:
+mod:   
     mov [chosenOption], eax
     push chosenOption
     push 2
@@ -115,7 +135,7 @@ _start:
     
 
     ; Encerre o programa
-    mov eax, 1
+sair:    mov eax, 1
     xor ebx, ebx
     int 0x80
 
@@ -123,13 +143,77 @@ ler_int_16:
             push ebp
             mov ebp, esp
 
-            sub esp, 6              ;reserva espaço para numero
+            sub esp, 7              ;reserva espaço para numero
 
             mov eax, 3
             mov ebx, 0
             mov ecx, esp
-            mov edx, 6
+            mov edx, 7
             int 80h                 ;le numero 16bits e escreve em [esp]
+
+            dec eax
+            mov byte[esp + eax], 0  ;tira o \n
+
+            ;verifica se tem -123
+            ;esp-- eax--
+            mov bl, [esp]
+            cmp ebx, 2dh
+            jne continue16
+            inc esp
+            dec eax
+            mov esi, 1
+
+continue16: dec eax                 ;expoente de 10
+            mov ecx, eax            ;ecx = expoente do 10
+            mov eax, 0              ;eax = resp
+            mov edx, 0              ;index
+            mov ebx, 0              
+
+p_caracter16: 
+            mov bl, [esp + edx]    ;le caracter
+            sub bl, 30h            ;passa para int
+            push ecx                ;salva expoente 10
+            push edx                ;salva index
+mult10_16:     
+            cmp ecx, 0              ;verifica se == 0
+            je proximo16
+            sal ebx, 1              ;ebx = 2i
+            mov edx, ebx            ;edx = 2i
+            sal ebx, 2              ;ebx = 8i
+            add ebx, edx            ;ebx = 10i
+            dec ecx
+            jmp mult10_16
+proximo16:    pop edx                 ;recupera index
+            pop ecx                 ;recupera expoente 10
+            dec ecx                 ;proximo expoente
+            inc edx                 ;proximo caracter
+            add eax, ebx            ;adiciona a resposta
+            cmp ecx, 0
+
+            jge p_caracter16
+
+            cmp esi, 1
+            jne fim16          
+            mov ebx, eax
+            mov eax, 0
+            sub eax, ebx
+            dec esp
+
+fim16:      add esp, 7
+            pop ebp
+            ret
+
+ler_int_32:
+            push ebp
+            mov ebp, esp
+
+            sub esp, 12              ;reserva espaço para numero
+
+            mov eax, 3
+            mov ebx, 0
+            mov ecx, esp
+            mov edx, 12
+            int 80h                 ;le numero 32bits e escreve em [esp]
 
             dec eax
             mov byte[esp + eax], 0  ;tira o \n
@@ -138,48 +222,48 @@ ler_int_16:
             ;esp-- eax--
             mov bl, [esp]
             cmp ebx, 2dh
-            jne continue
-            push byte 1
-            dec esp
+            jne continue32
+            inc esp
             dec eax
+            mov esi, 1
 
-continue:   dec eax                 ;expoente de 10
+continue32: dec eax                 ;expoente de 10
             mov ecx, eax            ;ecx = expoente do 10
             mov eax, 0              ;eax = resp
             mov edx, 0              ;index
             mov ebx, 0              
 
-p_caracter: 
-            mov bl, [esp + edx + 1]    ;le caracter
+p_caracter32: 
+            mov bl, [esp + edx]    ;le caracter
             sub bl, 30h            ;passa para int
             push ecx                ;salva expoente 10
             push edx                ;salva index
-mult10:     
+mult10_32:     
             cmp ecx, 0              ;verifica se == 0
-            je proximo
+            je proximo32
             sal ebx, 1              ;ebx = 2i
             mov edx, ebx            ;edx = 2i
             sal ebx, 2              ;ebx = 8i
             add ebx, edx            ;ebx = 10i
             dec ecx
-            jmp mult10
-proximo:    pop edx                 ;recupera index
+            jmp mult10_32
+proximo32:  pop edx                 ;recupera index
             pop ecx                 ;recupera expoente 10
             dec ecx                 ;proximo expoente
             inc edx                 ;proximo caracter
             add eax, ebx            ;adiciona a resposta
             cmp ecx, 0
 
-            jge p_caracter
+            jge p_caracter32
 
-            cmp [esp], byte 1
-            jne fim          
+            cmp esi, 1
+            jne fim32       
             mov ebx, eax
             mov eax, 0
             sub eax, ebx
-            add esp, 1
+            dec esp
 
-fim:        add esp, 6
+fim32:      add esp, 12
             pop ebp
             ret
 

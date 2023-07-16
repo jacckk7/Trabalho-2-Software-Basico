@@ -107,7 +107,7 @@ loop_principal:    push option
     call print_string       ;escreve sair
 
     push chosenOption
-    push 1
+    push 2
     call ler_string
 
     cmp [chosenOption], byte 37h
@@ -123,7 +123,14 @@ loop_principal:    push option
     cmp [chosenOption], byte 32h
     je subi
 
+    call adicao         ;retorna resultado em eax
+    ;imprime resultado
+    jmp loop_principal
+
 subi:
+    call subtracao
+    ;imprime resultado
+    jmp loop_principal
 multi:  
 divi:
 exp:
@@ -304,3 +311,64 @@ print_string:
     pop eax
     pop ebp
     ret 8
+
+adicao:
+        push ebp
+        mov ebp, esp
+
+        cmp [chosenOption], byte '1'   ;verifica se 32 bits
+        je add_32
+
+        sub esp, 2              ;resevar uma word na pilha
+        call ler_int_16         ;le primeiro numero -> eax
+        mov [esp], ax           ;salva primeiro numero na pilha
+        call ler_int_16         ;le segundo numero -> eax
+        
+        add ax, word [esp]      ;soma o segundo com o primeiro
+
+        and eax, 0000ffffh      ;zera os bits mais sig de eax
+        add esp, 2              ;libra espaco da pilha
+        jmp fim_add
+add_32: sub esp, 4              ;resevar dword na pilha
+        call ler_int_32         ;le primeiro numero ->eax
+        mov [esp], eax          ;salva prieiro numero na pilha
+        call ler_int_32         ;le segundo numero -> eax
+
+        add eax, dword[esp]     ;soma segundo com o primeiro
+
+        add esp, 4              ;libera espaco da pilha 
+fim_add:pop ebp
+        ret
+
+subtracao:
+        push ebp
+        mov ebp, esp
+
+        cmp [chosenOption], byte '1'
+        je sub_32
+
+        sub esp, 4
+        call ler_int_16
+        mov [esp], ax
+        call ler_int_16
+        mov [esp + 2], ax
+        
+        mov ax, [esp]
+        sub ax, [esp + 2]
+
+        and eax, 0000ffffh
+        add esp, 4
+        jmp fim_sub
+sub_32: sub esp, 8
+        call ler_int_32
+        mov [esp], eax
+        call ler_int_32
+        mov [esp + 4], eax
+
+        mov eax, [esp]
+        sub eax, dword[esp + 4]
+
+        add esp, 8
+fim_sub:pop ebp
+        ret
+    

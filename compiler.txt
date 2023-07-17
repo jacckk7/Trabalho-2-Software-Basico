@@ -13,7 +13,7 @@ ld -m elf_i386 -o hello hello.o
 >> git pull
 
 -> Fazer commit
->> git bcheckout -b <nome da branch>
+>> git checkout -b <nome da branch>
 >> git add .
 >> git commit -m "<Mensagem do que foi alterado>"
 >> git push origin <nome da branch>

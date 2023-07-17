@@ -125,6 +125,14 @@ loop_principal:    push option
 
     call adicao         ;retorna resultado em eax
     ;imprime resultado
+    sub esp, 14
+    mov ebx, esp
+    push eax
+    push ebx
+    call print_int
+    push eax
+    push ecx
+    call print_string
     jmp loop_principal
 
 subi:
@@ -190,7 +198,8 @@ mult10_16:
             add ebx, edx            ;ebx = 10i
             dec ecx
             jmp mult10_16
-proximo16:    pop edx                 ;recupera index
+proximo16:    
+            pop edx                 ;recupera index
             pop ecx                 ;recupera expoente 10
             dec ecx                 ;proximo expoente
             inc edx                 ;proximo caracter
@@ -274,6 +283,58 @@ fim32:      add esp, 12
             pop ebp
             ret
 
+
+print_int:
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp + 12]  ; argumento da função (número inteiro a ser convertido)
+    mov ebx, 10          ; divisor (usado para obter os dígitos individuais)
+    mov ecx, 14
+    mov edi, [ebp + 8]   ; ponteiro para o início da string (para retorno)
+
+    cmp eax, 0          ; verifique se o número é negativo
+    jge enter_number ; se for maior ou igual a zero, vá para a parte de número positivo
+
+    neg eax             ; inverte o sinal do número para torná-lo positivo
+
+enter_number:
+    dec ecx
+    mov byte [edi + ecx], 0
+    dec ecx
+    mov byte [edi + ecx], 10
+    dec ecx
+    mov byte [edi + ecx], 13
+
+positive_number:
+
+    xor edx, edx       ; limpe o registrador edx (usado para armazenar o resto da divisão)
+    cmp eax, 0         ; verifique se chegamos ao final dos dígitos
+    jnz get_next_digit ; se ainda houver dígitos a serem processados, vá para a próxima iteração
+
+    mov eax, [ebp + 12]
+    cmp eax, 0          ; verifique se o número é negativo
+    jge not_signal ; se for maior ou igual a zero, vá para a parte de número positivo
+
+    ; Caso o número seja negativo, coloque o sinal de menos no início da string
+    dec ecx
+    mov byte [edi + ecx], '-'
+not_signal:
+    add edi, ecx
+    sub ecx, 14
+    neg ecx
+    mov eax, edi       ; mova o ponteiro da string para eax (para retorno)
+    pop ebp            ; restaura o valor original do ebp
+    ret 8              ; retorna para o chamador
+
+get_next_digit:
+    ; Divisão sucessiva para obter os dígitos individuais do número
+    div ebx            ; eax = eax / ebx (resultado em eax, resto em edx)
+    add dl, '0'        ; converte o resto em seu equivalente em caractere
+    dec ecx            ; avance o ponteiro da string para a esquerda
+    mov [edi + ecx], dl      ; armazene o dígito no buffer da string
+    jmp positive_number  ; vá para a próxima iteração
+
 ler_string:    ;retorna o tamanho da string no eax
     push ebp
     mov ebp, esp
@@ -327,7 +388,7 @@ adicao:
         add ax, word [esp]      ;soma o segundo com o primeiro
 
         and eax, 0000ffffh      ;zera os bits mais sig de eax
-        add esp, 2              ;libra espaco da pilha
+        add esp, 2              ;libera espaco da pilha
         jmp fim_add
 add_32: sub esp, 4              ;resevar dword na pilha
         call ler_int_32         ;le primeiro numero ->eax
@@ -337,7 +398,8 @@ add_32: sub esp, 4              ;resevar dword na pilha
         add eax, dword[esp]     ;soma segundo com o primeiro
 
         add esp, 4              ;libera espaco da pilha 
-fim_add:pop ebp
+fim_add:
+        pop ebp
         ret
 
 subtracao:

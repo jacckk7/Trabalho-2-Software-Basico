@@ -45,6 +45,19 @@ section .bss
     chosenOption resb 1
 
 section .text
+    extern adicao
+    extern subtracao
+    extern multiplicacao
+    extern divisao
+    extern exponenciacao
+    extern op_mod
+
+    global chosenPrecision
+    global ler_int_16
+    global ler_int_32
+    global print_string
+    global overflow
+    global size_overflow
     global _start
 
 _start:
@@ -77,7 +90,8 @@ _start:
     push 2
     call ler_string         ;le precisao -> retorna o tamanho da opção
 
-loop_principal:    push option
+loop_principal:    
+    push option
     push size_option
     call print_string       ;escreve opcoes
 
@@ -429,7 +443,7 @@ get_next_digit_16:
     ; Divisão sucessiva para obter os dígitos individuais do número
     div bx            ; eax = eax / ebx (resultado em eax, resto em edx)
     add dl, '0'        ; converte o resto em seu equivalente em caractere
-    dec ecx            ; avance o ponteiro da string para a esquerda
+    dec ecx            ; avance o ponteiro da string
     mov [esp + ecx], dl      ; armazene o dígito no buffer da string
     jmp positive_number_16  ; vá para a próxima iteração
 
@@ -471,250 +485,3 @@ print_string:
     pop eax
     pop ebp
     ret 8
-
-adicao:
-        push ebp
-        mov ebp, esp
-
-        sub esp, 4              ;resevar dword na pilha
-
-        cmp [chosenPrecision], byte 31h
-        je adicao32
-
-        call ler_int_16
-
-        mov [esp], eax
-        call ler_int_16
-
-        add eax, [esp]
-
-        jmp fim_adicao
-
-adicao32:
-        call ler_int_32         ;le primeiro numero ->eax
-
-        mov [esp], eax          ;salva prieiro numero na pilha
-        call ler_int_32         ;le segundo numero -> eax
-
-        add eax, [esp]     ;soma segundo com o primeiro
-
-fim_adicao:
-        add esp, 4
-        pop ebp
-        ret
-
-subtracao:
-        push ebp
-        mov ebp, esp
-
-        sub esp, 8
-
-        cmp [chosenPrecision], byte 31h
-        je subtracao32
-
-        call ler_int_16
-        mov [esp], eax
-        call ler_int_16
-        mov [esp + 4], eax
-
-        mov eax, [esp]
-        sub eax, [esp + 4]
-
-        jmp fim_sub
-
-subtracao32:
-        call ler_int_32
-        mov [esp], eax
-        call ler_int_32
-        mov [esp + 4], eax
-
-        mov eax, [esp]
-        sub eax, [esp + 4]
-
-fim_sub:
-        add esp, 8
-        pop ebp
-        ret
-
-multiplicacao:
-        push ebp
-        mov ebp, esp
-
-
-        cmp [chosenPrecision], byte 31h
-        je multiplicacao32
-
-        call ler_int_16
-        mov ebx, eax
-        push ebx
-        call ler_int_16
-        pop ebx
-
-        imul bx
-        jo overflow_mul
-
-        jmp fim_multiplicacao
-multiplicacao32:
-        call ler_int_32
-        mov ebx, eax
-        push ebx
-        call ler_int_32
-        pop ebx
-
-        imul ebx
-        jo overflow_mul
-
-fim_multiplicacao:
-        pop ebp
-        ret
-
-overflow_mul:
-        push overflow
-        push size_overflow
-        call print_string
-
-        mov eax, 1
-        mov ebx, 0
-        int 80h
-
-divisao:
-    push ebp
-    mov ebp, esp
-
-    sub esp, 4              ;resevar dword na pilha
-
-    cmp [chosenPrecision], byte 31h
-    je divisao32
-
-    call ler_int_16
-    mov [esp], eax
-    
-    call ler_int_16
-    mov ebx, eax
-    mov eax, dword [esp]
-
-    xor edx, edx
-
-    idiv ebx
-
-    jmp fim_divisao
-
-divisao32:
-    call ler_int_32         ;le primeiro numero ->eax
-    mov [esp], eax
-
-    call ler_int_32
-
-    mov ebx, eax
-    mov eax, dword [esp]
-
-    xor edx, edx
-
-    idiv ebx
-
-fim_divisao:
-    add esp, 4
-    pop ebp
-    ret
-
-exponenciacao:
-        push ebp
-        mov ebp, esp
-
-        cmp [chosenPrecision], byte 31h
-        je esponenciacao32
-
-        call ler_int_16
-        mov ebx, eax       ;ebx recebe base
-        push ebx
-        call ler_int_16
-        pop ebx
-        mov ecx, eax        ;ecx recebe expoente
-
-        mov eax, 1
-
-loop_exp16:
-        cmp ecx, 0
-        je fim_exponenciacao
-        
-        imul bx
-        jo overflow_exp
-
-        dec ecx
-        jmp loop_exp16
-
-esponenciacao32:
-        call ler_int_32
-        mov ebx, eax
-        push ebx
-        call ler_int_32
-        pop ebx
-        mov ecx, eax
-
-        mov eax, 1
-
-loop_exp32:
-        cmp ecx, 0
-        je fim_exponenciacao
-
-        imul ebx
-        jo overflow_exp
-
-        dec ecx
-        jmp loop_exp32
-
-fim_exponenciacao:
-        pop ebp
-        ret
-
-overflow_exp:
-        push overflow
-        push size_overflow
-        call print_string
-
-        mov eax, 1
-        mov ebx, 0
-        int 80h
-op_mod:
-    push ebp
-    mov ebp, esp
-
-    sub esp, 4              ;resevar dword na pilha
-
-    cmp [chosenPrecision], byte 31h
-    je op_mod32
-
-    call ler_int_16
-    mov [esp], eax
-
-    call ler_int_16
-    mov ebx, eax
-    mov eax, dword [esp]
-
-    xor edx, edx
-
-    idiv ebx
-
-    mov eax, edx
-
-    jmp fim_op_mod
-
-op_mod32:
-    call ler_int_32         ;le primeiro numero ->eax
-    mov [esp], eax
-
-    call ler_int_32
-
-    mov ebx, eax
-    mov eax, dword [esp]
-
-    xor edx, edx
-
-    idiv ebx
-
-    mov eax, edx
-
-fim_op_mod:
-    add esp, 4
-    pop ebp
-    ret

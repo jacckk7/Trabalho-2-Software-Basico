@@ -114,7 +114,7 @@ loop_principal:    push option
     cmp [chosenOption], byte 37h
     je sair 
     cmp [chosenOption], byte 36h
-    je mod
+    je modi
     cmp [chosenOption], byte 35h
     je exp
     cmp [chosenOption], byte 34h
@@ -132,12 +132,12 @@ subi:
     jmp imprime_resultado
 multi:  
 divi:
+    call divisao        ;retorna resultado em eax
+    jmp imprime_resultado
 exp:
-mod:   
-    mov [chosenOption], eax
-    push chosenOption
-    push 2
-    call print_string
+modi:   
+    call op_mod       ;retorna resultado em eax
+    jmp imprime_resultado
 
 imprime_resultado:
 
@@ -395,7 +395,7 @@ positive_number_16:
 not_signal_16:
     mov edi, esp
     add edi, ecx
-    sub ecx, 14
+    sub ecx, 9
     neg ecx
     mov eax, edi       ; mova o ponteiro da string para eax (para retorno)
 
@@ -504,3 +504,87 @@ subtracao:
         add esp, 8
 fim_sub:pop ebp
         ret
+
+divisao:
+    push ebp
+    mov ebp, esp
+
+    sub esp, 4              ;resevar dword na pilha
+
+    cmp [chosenPrecision], byte 31h
+    je divisao32
+
+    call ler_int_16
+    mov [esp], eax
+    
+    call ler_int_16
+    mov ebx, eax
+    mov eax, dword [esp]
+
+    xor edx, edx
+
+    idiv ebx
+
+    jmp fim_divisao
+
+divisao32:
+    call ler_int_32         ;le primeiro numero ->eax
+    mov [esp], eax
+
+    call ler_int_32
+
+    mov ebx, eax
+    mov eax, dword [esp]
+
+    xor edx, edx
+
+    idiv ebx
+
+fim_divisao:
+    add esp, 4
+    pop ebp
+    ret
+
+op_mod:
+    push ebp
+    mov ebp, esp
+
+    sub esp, 4              ;resevar dword na pilha
+
+    cmp [chosenPrecision], byte 31h
+    je op_mod32
+
+    call ler_int_16
+    mov [esp], eax
+
+    call ler_int_16
+    mov ebx, eax
+    mov eax, dword [esp]
+
+    xor edx, edx
+
+    idiv ebx
+
+    mov eax, edx
+
+    jmp fim_op_mod
+
+op_mod32:
+    call ler_int_32         ;le primeiro numero ->eax
+    mov [esp], eax
+
+    call ler_int_32
+
+    mov ebx, eax
+    mov eax, dword [esp]
+
+    xor edx, edx
+
+    idiv ebx
+
+    mov eax, edx
+
+fim_op_mod:
+    add esp, 4
+    pop ebp
+    ret

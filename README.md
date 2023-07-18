@@ -1,7 +1,7 @@
 -> Compilar o programa
-nasm -f elf -o calculadora.o calculadora.asm && nasm -f elf -o soma.o soma.asm && nasm -f elf -o subtracao.o subtracao.asm && nasm -f elf -o multiplicacao.o multiplicacao.asm && nasm -f elf -o divisao.o divisao.asm && nasm -f elf -o exponenciacao.o exponenciacao.asm && nasm -f elf -o mod.o mod.asm
+>> nasm -f elf -o calculadora.o calculadora.asm && nasm -f elf -o soma.o soma.asm && nasm -f elf -o subtracao.o subtracao.asm && nasm -f elf -o multiplicacao.o multiplicacao.asm && nasm -f elf -o divisao.o divisao.asm && nasm -f elf -o exponenciacao.o exponenciacao.asm && nasm -f elf -o mod.o mod.asm
 
-ld -m elf_i386 -o calculadora calculadora.o soma.o subtracao.o multiplicacao.o divisao.o exponenciacao.o mod.o
+>> ld -m elf_i386 -o calculadora calculadora.o soma.o subtracao.o multiplicacao.o divisao.o exponenciacao.o mod.o
 
 -> Configurar git no wsl
 >> git config --global user.email "you@example.com"

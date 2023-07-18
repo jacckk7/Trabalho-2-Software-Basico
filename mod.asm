@@ -21,11 +21,16 @@ op_mod:
     mov ebx, eax
     mov eax, dword [esp]
 
+    cmp eax, 0
+    jl first_neg_mod
+
     xor edx, edx
+    jmp do_mod
+first_neg_mod:
+    mov edx, dword -1
 
+do_mod:
     idiv ebx
-
-    mov eax, edx
 
     jmp fim_op_mod
 
@@ -38,13 +43,19 @@ op_mod32:
     mov ebx, eax
     mov eax, dword [esp]
 
-    xor edx, edx
+    cmp eax, 0
+    jl first_neg_mod_32
 
+    xor edx, edx
+    jmp do_mod_32
+first_neg_mod_32:
+    mov edx, dword -1
+
+do_mod_32:
     idiv ebx
 
-    mov eax, edx
-
 fim_op_mod:
+    mov eax, edx
     add esp, 4
     pop ebp
     ret

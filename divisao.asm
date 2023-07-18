@@ -21,8 +21,15 @@ divisao:
     mov ebx, eax
     mov eax, dword [esp]
 
-    xor edx, edx
+    cmp eax, 0
+    jl first_neg_div
 
+    xor edx, edx
+    jmp do_div
+first_neg_div:
+    mov edx, dword -1
+
+do_div:
     idiv ebx
 
     jmp fim_divisao
@@ -36,8 +43,15 @@ divisao32:
     mov ebx, eax
     mov eax, dword [esp]
 
-    xor edx, edx
+    cmp eax, 0
+    jl first_neg_div_32
 
+    xor edx, edx
+    jmp do_div_32
+first_neg_div_32:
+    mov edx, dword -1
+
+do_div_32:
     idiv ebx
 
 fim_divisao:

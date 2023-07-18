@@ -36,6 +36,9 @@ section .data
     getout db '- 7: SAIR', 13, 10, 0
     size_getout EQU $-getout
 
+    overflow db 'OCORREU OVERFLOW', 13, 10, 0
+    size_overflow EQU $-overflow
+
 section .bss
     personName resb 16
     chosenPrecision resb 1
@@ -131,10 +134,14 @@ subi:
     call subtracao      ;retorna resultado em eax
     jmp imprime_resultado
 multi:  
+    call multiplicacao
+    jmp imprime_resultado
 divi:
     call divisao        ;retorna resultado em eax
     jmp imprime_resultado
 exp:
+    call exponenciacao
+    jmp imprime_resultado
 modi:   
     call op_mod       ;retorna resultado em eax
     jmp imprime_resultado
@@ -146,10 +153,20 @@ imprime_resultado:
     je imprime_resultado32
 
     call print_int_16
+
+    push personName         
+    push 1                  
+    call ler_string
+
     jmp loop_principal
 
 imprime_resultado32:
     call print_int
+
+    push personName         
+    push 1                  
+    call ler_string
+
     jmp loop_principal
 
     ; Encerre o programa
@@ -471,8 +488,6 @@ adicao:
 
         add eax, [esp]
 
-        
-
         jmp fim_adicao
 
 adicao32:
@@ -493,6 +508,21 @@ subtracao:
         mov ebp, esp
 
         sub esp, 8
+
+        cmp [chosenPrecision], byte 31h
+        je subtracao32
+
+        call ler_int_16
+        mov [esp], eax
+        call ler_int_16
+        mov [esp + 4], eax
+
+        mov eax, [esp]
+        sub eax, [esp + 4]
+
+        jmp fim_sub
+
+subtracao32:
         call ler_int_32
         mov [esp], eax
         call ler_int_32
@@ -501,9 +531,51 @@ subtracao:
         mov eax, [esp]
         sub eax, [esp + 4]
 
+fim_sub:
         add esp, 8
-fim_sub:pop ebp
+        pop ebp
         ret
+
+multiplicacao:
+        push ebp
+        mov ebp, esp
+
+
+        cmp [chosenPrecision], byte 31h
+        je multiplicacao32
+
+        call ler_int_16
+        mov ebx, eax
+        push ebx
+        call ler_int_16
+        pop ebx
+
+        imul bx
+        jo overflow_mul
+
+        jmp fim_multiplicacao
+multiplicacao32:
+        call ler_int_32
+        mov ebx, eax
+        push ebx
+        call ler_int_32
+        pop ebx
+
+        imul ebx
+        jo overflow_mul
+
+fim_multiplicacao:
+        pop ebp
+        ret
+
+overflow_mul:
+        push overflow
+        push size_overflow
+        call print_string
+
+        mov eax, 1
+        mov ebx, 0
+        int 80h
 
 divisao:
     push ebp
@@ -545,6 +617,64 @@ fim_divisao:
     pop ebp
     ret
 
+exponenciacao:
+        push ebp
+        mov ebp, esp
+
+        cmp [chosenPrecision], byte 31h
+        je esponenciacao32
+
+        call ler_int_16
+        mov ebx, eax       ;ebx recebe base
+        push ebx
+        call ler_int_16
+        pop ebx
+        mov ecx, eax        ;ecx recebe expoente
+
+        mov eax, 1
+
+loop_exp16:
+        cmp ecx, 0
+        je fim_exponenciacao
+        
+        imul bx
+        jo overflow_exp
+
+        dec ecx
+        jmp loop_exp16
+
+esponenciacao32:
+        call ler_int_32
+        mov ebx, eax
+        push ebx
+        call ler_int_32
+        pop ebx
+        mov ecx, eax
+
+        mov eax, 1
+
+loop_exp32:
+        cmp ecx, 0
+        je fim_exponenciacao
+
+        imul ebx
+        jo overflow_exp
+
+        dec ecx
+        jmp loop_exp32
+
+fim_exponenciacao:
+        pop ebp
+        ret
+
+overflow_exp:
+        push overflow
+        push size_overflow
+        call print_string
+
+        mov eax, 1
+        mov ebx, 0
+        int 80h
 op_mod:
     push ebp
     mov ebp, esp
